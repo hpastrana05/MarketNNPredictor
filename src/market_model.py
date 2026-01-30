@@ -24,6 +24,4 @@ class MarketLSTM(nn.Module):
         predictions = self.linear(last_time_step)
         return predictions
 
-# Initialize and move to your 1650 Ti
-model = MarketLSTM().to("cuda")
-print(model)
+
