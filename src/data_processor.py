@@ -29,7 +29,9 @@ class DataProcessor:
 
         if self.target_column:
             # Drop the timestamp as it will be Noise for the NN
+            print("Preprocessing data... Dropping Timestamp column.")
             data = self.data.drop(columns=['Timestamp'])
+            print("Dropped Timestamp column.")
 
             # This will assign the idx of train and test
             data_len = len(data)
@@ -38,17 +40,24 @@ class DataProcessor:
             else:
                 train_idx = int(len(data)*train)
 
+            print(f"Splitting data at index: {train_idx}")
             train_data = data[:train_idx]
             test_data = data[train_idx:]
 
             # Fit the scaler on training data only
+            print("Fitting scaler on training data...")
             self.scaler.fit(train_data)
+            print("Scaler fitted.")
+            print("Transforming data...")
             scaled_train = self.scaler.transform(train_data)
             scaled_test = self.scaler.transform(test_data)
+            print("Data transformed.")
 
             # Sequence data creation
+            print("Creating sequences...")
             X_train, y_train = self._create_sequences(scaled_train)
             X_test, y_test = self._create_sequences(scaled_test)
+            print("Sequences created.")
 
             self.preprocessed_data = (X_train, y_train, X_test, y_test)
 
@@ -60,15 +69,24 @@ class DataProcessor:
 
 
     def _create_sequences(self, data):
-        '''Creates sequences of data for time series prediction.'''
-        sequences = []
-        targets = []
-        for i in range(len(data) - self.sequence_length):
-            seq = data[i:i + self.sequence_length]
-            target = data[i + self.sequence_length][self.target_column]
-            sequences.append(seq)
-            targets.append(target)
-        return np.array(sequences), np.array(targets)
+        '''Creates sequences of data for time series prediction using efficient views.'''
+        # Use stride_tricks to avoid creating a massive list and copying memory
+        seq_len = self.sequence_length
+        
+        # Create view: (Batch, Features, Time)
+        # sliding_window_view appends the window dimension at the end when axis is specified
+        windows = np.lib.stride_tricks.sliding_window_view(data, window_shape=seq_len, axis=0)
+        
+        # We drop the last window because its corresponding target (at index N) would be out of bounds
+        X = windows[:-1]
+        
+        # Transpose to get (Batch, Time, Features) from (Batch, Features, Time)
+        X = X.transpose(0, 2, 1)
+        
+        # Targets start from index seq_len
+        y = data[seq_len:, self.target_column]
+        
+        return X, y
     
     def save_scaler(self, name = "scaler.save"):
         '''
