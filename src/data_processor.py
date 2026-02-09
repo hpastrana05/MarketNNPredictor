@@ -49,8 +49,8 @@ class DataProcessor:
             self.scaler.fit(train_data)
             print("Scaler fitted.")
             print("Transforming data...")
-            scaled_train = self.scaler.transform(train_data)
-            scaled_test = self.scaler.transform(test_data)
+            scaled_train = self.scaler.transform(train_data).astype(np.float32)
+            scaled_test = self.scaler.transform(test_data).astype(np.float32)
             print("Data transformed.")
 
             # Sequence data creation
