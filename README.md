@@ -3,6 +3,7 @@
 MarketNNPredictor is a project designed for time-series forecasting, specifically utilizing a PyTorch Long Short-Term Memory (LSTM) neural network to predict market trends. The project follows a structured workflow for data acquisition, preprocessing, model training, and prediction.
 
 ## Future improvements
+- Data should be compressed other way (RobustScaler, StandardScaler, Scale windows locally)
 - Data preprocessing shouldn't split the data for train and test
 - Model training should properly set the data for training and testing
 - Make a recursive prediction for having more data predicted
